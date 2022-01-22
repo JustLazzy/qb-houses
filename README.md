@@ -1,8 +1,8 @@
+# NOTE
+This edit is not done yet, and you need fork of my lj inventory [here](https://github.com/JustLazzy/lj-inventory)
+
 # qb-houses
 Real Estate for QB-Core Framework :house_with_garden:
-
-# NOTE
-This edit is not done yet, you need fork of my lj inventory [here](https://github.com/JustLazzy/lj-inventory)
 
 # License
 
