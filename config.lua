@@ -6,6 +6,15 @@ Config.UnownedBlips = false
 
 Config.Houses = {}
 
+Config.Mailbox = {}
+
+Config.Mailboxmodel = {
+	'prop_letterbox_01',
+	'prop_letterbox_02',
+	'prop_letterbox_03',
+	'prop_letterbox_04'
+}
+
 Config.Furniture = {
 	["sofas"] = {
 		label = "Sofas",

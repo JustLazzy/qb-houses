@@ -132,7 +132,7 @@ local function CreateInstuctionScaleform(scaleform)
     PushScaleformMovieFunction(scaleform, "SET_DATA_SLOT")
     PushScaleformMovieFunctionParameterInt(1)
     InstructionButton(GetControlInstructionalButton(1, 194, true))
-    InstructionButtonMessage("Exit Camera")
+    InstructionButtonMessage(Lang:t("info.exit_camera"))
     PopScaleformMovieFunctionVoid()
     PushScaleformMovieFunction(scaleform, "DRAW_INSTRUCTIONAL_BUTTONS")
     PopScaleformMovieFunctionVoid()
@@ -421,7 +421,12 @@ local function getDataForHouseTier(house, coords)
         [3] = function(coords) return exports['qb-interior']:CreateTrevorsShell(coords) end,
         [4] = function(coords) return exports['qb-interior']:CreateCaravanShell(coords) end,
         [5] = function(coords) return exports['qb-interior']:CreateLesterShell(coords) end,
-        [6] = function(coords) return exports['qb-interior']:CreateRanchShell(coords) end
+        [6] = function(coords) return exports['qb-interior']:CreateRanchShell(coords) end,
+        [7] = function(coords) return exports['qb-interior']:CreateHighend1(coords) end,
+        [8] = function(coords) return exports['qb-interior']:CreateHighend2(coords) end,
+        [9] = function(coords) return exports['qb-interior']:CreateHighend3(coords) end,
+        [10] = function(coords) return exports['qb-interior']:CreateHighend(coords) end,
+        [11] = function(coords) return exports['qb-interior']:CreateHighendV2(coords) end,
     }
 
     if not shells[houseTier] then
@@ -739,6 +744,12 @@ RegisterNetEvent('qb-houses:client:setHouseConfig', function(houseConfig)
     Config.Houses = houseConfig
 end)
 
+RegisterNetEvent('qb-houses:client:setMailboxConfig', function(house, mailbox)
+    Config.Houses[house].mailbox = mailbox
+end)
+
+
+
 RegisterNetEvent('qb-houses:client:lockHouse', function(bool, house)
     Config.Houses[house].locked = bool
 end)
@@ -772,6 +783,76 @@ RegisterNetEvent('qb-houses:client:addGarage', function()
         QBCore.Functions.Notify(Lang:t("error.no_house"), "error")
     end
 end)
+
+-- Mailbox wip
+RegisterNetEvent('qb-houses:client:addMailbox', function(mailbox, mailboxhash)
+    if ClosestHouse ~= nil then
+        if mailbox ~= nil then
+            local prophash = mailboxhash or nil
+            local x,y,z = table.unpack(GetEntityCoords(mailbox))
+            local rx,ry,yaw = table.unpack(GetEntityRotation(mailbox))
+            local data = {
+                x = x,
+                y = y,
+                z = z,
+                hash = prophash,
+                yaw = yaw
+            }
+            TriggerServerEvent('qb-houses:server:addMailbox', ClosestHouse, data)
+        end
+    else
+        QBCore.Functions.Notify(Lang:t("error.no_house"), "error")
+    end
+end)
+
+RegisterNetEvent('qb-houses:client:testing', function(src)
+    if ClosestHouse ~= nil then
+        print(json.encode(Config.Houses[ClosestHouse].mailbox))
+    end
+end)
+
+RegisterNetEvent('qb-houses:client:setMailboxObject', function (model)
+    local x, y, z = table.unpack(GetEntityCoords(PlayerPedId()))
+    local mailboxhash
+    local mailboxobject
+    if model ~= nil then
+        mailboxhash = GetHashKey(tostring(model))
+        RequestModel(mailboxhash)
+        while not HasModelLoaded(mailboxhash) do
+            Wait(100)
+        end
+        
+        mailboxobject = CreateObjectNoOffset(mailboxhash, x, y, z, false, false, false)
+
+        local rx, ry, rz = GetEntityRotation(PlayerPedId())
+    
+        SetEntityRotation(object, rx, ry, rz)
+    
+        PlaceObjectOnGroundProperly(mailboxobject)
+    
+        SetEntityCompletelyDisableCollision(mailboxobject, true)
+
+        TriggerEvent('qb-houses:client:addMailbox', mailboxobject, mailboxhash)
+    else
+        for k,v in ipairs(Config.Mailboxmodel) do
+            local closestObject = GetClosestObjectOfType(x, y, z, 10.0, v, false, false, false)
+            if closestObject ~= 0 then
+                mailboxobject = closestObject
+                mailboxhash = GetHashKey(v)
+                break
+            end
+        end
+        if mailboxobject ~= nil then
+            TriggerEvent('qb-houses:client:addMailbox', mailboxobject)
+        else
+            QBCore.Functions.Notify('Nearby mailbox is not found', 'error')
+        end
+    end
+
+end)
+
+
+-- END OF MAILBOX
 
 RegisterNetEvent('qb-houses:client:toggleDoorlock', function()
     local pos = GetEntityCoords(PlayerPedId())
@@ -909,7 +990,7 @@ RegisterNetEvent('qb-houses:client:setupHouseBlips2', function() -- Setup unowne
             SetBlipScale  (HouseBlip2, 0.65)
             SetBlipAsShortRange(HouseBlip2, true)
             SetBlipColour(HouseBlip2, 3)
-            AddTextEntry('UnownedHouse', 'House For Sale')
+            AddTextEntry('UnownedHouse', Lang:t("info.house_for_sale"))
             BeginTextCommandSetBlipName('UnownedHouse')
             EndTextCommandSetBlipName(HouseBlip2)
             UnownedHouseBlips[#UnownedHouseBlips+1] = HouseBlip2
@@ -924,7 +1005,7 @@ RegisterNetEvent('qb-houses:client:createBlip', function(coords) -- Create unown
     SetBlipScale  (NewHouseBlip, 0.65)
     SetBlipAsShortRange(NewHouseBlip, true)
     SetBlipColour(NewHouseBlip, 3)
-    AddTextEntry('NewHouseBlip', 'House For Sale')
+    AddTextEntry('NewHouseBlip', Lang:t("info.house_for_sale"))
     BeginTextCommandSetBlipName('NewHouseBlip')
     EndTextCommandSetBlipName(NewHouseBlip)
     UnownedHouseBlips[#UnownedHouseBlips+1] = NewHouseBlip
@@ -1108,6 +1189,31 @@ RegisterNetEvent('qb-houses:client:OpenStash', function()
         TriggerServerEvent("inventory:server:OpenInventory", "stash", CurrentHouse)
         TriggerServerEvent("InteractSound_SV:PlayOnSource", "StashOpen", 0.4)
         TriggerEvent("inventory:client:SetCurrentStash", CurrentHouse)
+    end
+end)
+
+RegisterNetEvent('qb-houses:client:OpenMailbox', function()
+    if ClosestHouse ~= nil then
+        local ped = PlayerPedId()
+        local pos = GetEntityCoords(ped)
+        local mailboxinfo = Config.Houses[ClosestHouse].mailbox
+        print(json.encode(mailboxinfo))
+        if mailboxinfo.x ~= nil then
+            local dist = #(pos - vector3(mailboxinfo.x, mailboxinfo.y, mailboxinfo.z))
+            print(dist)
+            if dist < 3.5 then 
+                TriggerServerEvent("inventory:server:OpenInventory", "mailbox", ClosestHouse)
+                TriggerServerEvent("InteractSound_SV:PlayOnSource", "Mailbox", 0.4)
+                TriggerEvent("inventory:client:SetCurrentMailbox", ClosestHouse)
+            else 
+                -- QBCore.Functions.Notify(Lang:t("error.no_mailbox"), "error")
+                QBCore.Functions.Notify("Too long", "error")
+            end
+        else
+            QBCore.Functions.Notify(Lang:t("error.no_mailbox"), "error")
+        end
+    else
+        QBCore.Functions.Notify(Lang:t("error.no_mailbox"), "error")
     end
 end)
 
@@ -1414,6 +1520,25 @@ CreateThread(function()
             end
         end
         Wait(3)
+    end
+end)
+
+CreateThread(function()
+    exports['qb-target']:AddTargetModel(Config.Mailboxmodel, {
+        options = {
+            {
+                type="client",
+                event="qb-houses:client:OpenMailbox",
+                icon="fas fa-envelope",
+                label="Open Mailbox"
+            },
+        },
+        distance = 1.5
+    })
+    Wait(1000)
+    if ClosestHouse ~= nil then
+        local test = Config.Houses[ClosestHouse]
+        print(test)
     end
 end)
 

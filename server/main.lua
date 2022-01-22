@@ -9,6 +9,7 @@ local housesLoaded = false
 CreateThread(function()
     local HouseGarages = {}
     local result = MySQL.Sync.fetchAll('SELECT * FROM houselocations', {})
+    -- print(result)
     if result[1] then
         for k, v in pairs(result) do
             local owned = false
@@ -16,6 +17,7 @@ CreateThread(function()
                 owned = true
             end
             local garage = json.decode(v.garage) or {}
+            local mailbox = json.decode(v.mailbox) or {}
             Config.Houses[v.name] = {
                 coords = json.decode(v.coords),
                 owned = v.owned,
@@ -24,7 +26,8 @@ CreateThread(function()
                 adress = v.label,
                 tier = v.tier,
                 garage = garage,
-                decorations = {}
+                decorations = {},
+                mailbox = mailbox
             }
             HouseGarages[v.name] = {
                 label = v.label,
@@ -73,6 +76,11 @@ QBCore.Commands.Add("createhouse", "Create House (Real Estate Only)", {{name = "
     end
 end)
 
+QBCore.Commands.Add("checkmailbox", "CHECK MAILBOX", {}, false, function(source)
+    local src = source
+    TriggerClientEvent('qb-houses:client:testing', src)
+end, 'god')
+
 QBCore.Commands.Add("addgarage", "Add House Garage (Real Estate Only)", {}, false, function(source)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
@@ -86,6 +94,61 @@ end)
 QBCore.Commands.Add("ring", "Ring The Doorbell", {}, false, function(source)
     local src = source
     TriggerClientEvent('qb-houses:client:RequestRing', src)
+end)
+
+-- THIS COMMAND IS NOT READY YET!
+
+-- QBCore.Commands.Add('addmailbox', 'Add house mailbox (Real Estate Only)', {{name = "props", help="Do you want to spawn mailbox props? (yes/no)"}, {name = "mailbox_number", help = "Mailbox model number, choose 1-4"}}, false, function(source, args)
+--     local src = source
+--     local props = args[1]
+--     local mailboxnumber = tonumber(args[2])
+--     local Player = QBCore.Functions.GetPlayer(src)
+--     if Player.PlayerData.job.name == "realestate" then
+--         if not props then
+--             props = "yes"
+--         end
+--         if props == "no" then
+--             if not mailboxnumber or mailboxnumber == 0 or mailboxnumber > Config.Mailboxmodel.length then
+--                 TriggerClientEvent("QBCore:Notify", src, "Invalid mailbox model number, please choose between 1-"..Config.Mailboxmodel.length, "error")
+--             else
+--                 local mailboxmodel = select(mailboxnumber, table.unpack(Config.Mailboxmodel))
+--                 print(mailboxmodel)
+--             end
+--         elseif props == "no" then
+--             TriggerClientEvent("QBCore:Notify", src, "OK, you don't want to spawn props", "success")
+--             TriggerClientEvent("qb-houses:client:addMailbox", src)
+--         else 
+--             TriggerClientEvent("QBCore:Notify", src, "Invalid argument: "..props, "error") 
+--         end
+--     else
+--         TriggerClientEvent("QBCore:Notify", src, Lang:t("error.realestate_only"), "error")
+--     end
+-- end)
+
+QBCore.Commands.Add('addmailbox', 'Add house mailbox (Real Estate Only)', {{name = "object", help="Spawn mailbox object? (yes/no)"}, {name = "object type", help = {"Choose between 1-"..#Config.Mailboxmodel}}}, false, function(source, args)
+    local Player = QBCore.Functions.GetPlayer(source)
+    local ped = GetPlayerPed(source)
+    local x1,y1,z1 = GetEntityCoords(ped)
+    local props = args[1]
+    local mailboxnumber = tonumber(args[2])
+    if Player.PlayerData.job.name == "realestate" then
+        if props:lower() == "yes" then
+            if mailboxnumber ~= nil and mailboxnumber ~= 0 and mailboxnumber <= #Config.Mailboxmodel then
+                TriggerClientEvent("QBCore:Notify", source, "Good", "success")
+                local mailboxobject = Config.Mailboxmodel[mailboxnumber]
+                -- print(mailboxobject)
+                TriggerClientEvent('qb-houses:client:setMailboxObject', source, mailboxobject)
+            else
+                TriggerClientEvent("QBCore:Notify", source, "Invalid model please choose between 1-"..#Config.Mailboxmodel, "error")
+            end
+        elseif props:lower() == "no" then
+            TriggerClientEvent('qb-houses:client:setMailboxObject', source)
+        else
+            TriggerClientEvent("QBCore:Notify", source, "Invalid argument: "..props, "error") 
+        end
+    else
+        TriggerClientEvent("QBCore:Notify", source, Lang:t("error.realestate_only"), "error")
+    end
 end)
 
 -- Item
@@ -182,7 +245,8 @@ RegisterNetEvent('qb-houses:server:addNewHouse', function(street, coords, price,
         adress = label,
         tier = tier,
         garage = {},
-        decorations = {}
+        decorations = {},
+        mailbox = {}
     }
     TriggerClientEvent("qb-houses:client:setHouseConfig", -1, Config.Houses)
     TriggerClientEvent('QBCore:Notify', src, Lang:t("info.added_house", {value = label}))
@@ -198,6 +262,17 @@ RegisterNetEvent('qb-houses:server:addGarage', function(house, coords)
     }
     TriggerClientEvent("qb-garages:client:addHouseGarage", -1, house, garageInfo)
     TriggerClientEvent('QBCore:Notify', src, Lang:t("info.added_garage", {value = garageInfo.label}))
+end)
+
+-- MAILBOX STILL WIP
+
+RegisterNetEvent('qb-houses:server:addMailbox', function(house, coords)
+    local src = source 
+    MySQL.Async.execute('UPDATE houselocations SET mailbox = ? WHERE name = ?', {json.encode(coords), house})
+    TriggerClientEvent('QBCore:Notify', src, "Succesfully added mailbox", "success")
+    -- local houses = Config.Houses[house]
+    -- houses['mailbox'] = coords
+    TriggerClientEvent('qb-houses:client:setMailboxConfig', -1, house, coords)
 end)
 
 RegisterNetEvent('qb-houses:server:viewHouse', function(house)

@@ -22,6 +22,7 @@ local Translations = {
         ["remove_key_from"] = "Keys Have Been Removed From %{firstname} %{lastname}",
         ["already_keys"] = "This person already has the keys of the house!",
         ["something_wrong"] = "Something went wrong try again!",
+        ["no_mailbox"] = "Mailbox for this property is not been set yet"
     },
     success = {
         ["unlocked"] = "House is unlocked!",
