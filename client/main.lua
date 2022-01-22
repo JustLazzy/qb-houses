@@ -1535,11 +1535,6 @@ CreateThread(function()
         },
         distance = 1.5
     })
-    Wait(1000)
-    if ClosestHouse ~= nil then
-        local test = Config.Houses[ClosestHouse]
-        print(test)
-    end
 end)
 
 RegisterCommand('getoffset', function()

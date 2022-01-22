@@ -93,33 +93,6 @@ end)
 
 -- THIS COMMAND IS NOT READY YET!
 
--- QBCore.Commands.Add('addmailbox', 'Add house mailbox (Real Estate Only)', {{name = "props", help="Do you want to spawn mailbox props? (yes/no)"}, {name = "mailbox_number", help = "Mailbox model number, choose 1-4"}}, false, function(source, args)
---     local src = source
---     local props = args[1]
---     local mailboxnumber = tonumber(args[2])
---     local Player = QBCore.Functions.GetPlayer(src)
---     if Player.PlayerData.job.name == "realestate" then
---         if not props then
---             props = "yes"
---         end
---         if props == "no" then
---             if not mailboxnumber or mailboxnumber == 0 or mailboxnumber > Config.Mailboxmodel.length then
---                 TriggerClientEvent("QBCore:Notify", src, "Invalid mailbox model number, please choose between 1-"..Config.Mailboxmodel.length, "error")
---             else
---                 local mailboxmodel = select(mailboxnumber, table.unpack(Config.Mailboxmodel))
---                 print(mailboxmodel)
---             end
---         elseif props == "no" then
---             TriggerClientEvent("QBCore:Notify", src, "OK, you don't want to spawn props", "success")
---             TriggerClientEvent("qb-houses:client:addMailbox", src)
---         else 
---             TriggerClientEvent("QBCore:Notify", src, "Invalid argument: "..props, "error") 
---         end
---     else
---         TriggerClientEvent("QBCore:Notify", src, Lang:t("error.realestate_only"), "error")
---     end
--- end)
-
 QBCore.Commands.Add('addmailbox', 'Add house mailbox (Real Estate Only)', {{name = "object", help="Spawn mailbox object? (yes/no)"}, {name = "object type", help = {"Choose between 1-"..#Config.Mailboxmodel}}}, false, function(source, args)
     local Player = QBCore.Functions.GetPlayer(source)
     local ped = GetPlayerPed(source)
