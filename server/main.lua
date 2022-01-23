@@ -238,8 +238,6 @@ RegisterNetEvent('qb-houses:server:addMailbox', function(house, coords)
     local src = source 
     MySQL.Async.execute('UPDATE houselocations SET mailbox = ? WHERE name = ?', {json.encode(coords), house})
     TriggerClientEvent('QBCore:Notify', src, "Succesfully added mailbox", "success")
-    -- local houses = Config.Houses[house]
-    -- houses['mailbox'] = coords
     TriggerClientEvent('qb-houses:client:setMailboxConfig', -1, house, coords)
 end)
 

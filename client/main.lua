@@ -422,6 +422,11 @@ local function getDataForHouseTier(house, coords)
         [4] = function(coords) return exports['qb-interior']:CreateCaravanShell(coords) end,
         [5] = function(coords) return exports['qb-interior']:CreateLesterShell(coords) end,
         [6] = function(coords) return exports['qb-interior']:CreateRanchShell(coords) end,
+        [7] = function(coords) return exports['qb-interior']:CreateHighend1(coords) end,
+        [8] = function(coords) return exports['qb-interior']:CreateHighend2(coords) end,
+        [9] = function(coords) return exports['qb-interior']:CreateHighend3(coords) end,
+        [10] = function(coords) return exports['qb-interior']:CreateHighend(coords) end,
+        [11] = function(coords) return exports['qb-interior']:CreateHighendV2(coords) end,
     }
 
     if not shells[houseTier] then
