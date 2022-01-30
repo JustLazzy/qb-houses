@@ -11,8 +11,7 @@ Config.Mailbox = {}
 Config.Mailboxmodel = {
 	'prop_letterbox_01',
 	'prop_letterbox_02',
-	'prop_letterbox_03',
-	'prop_letterbox_04'
+	'prop_letterbox_03'
 }
 
 Config.Furniture = {
