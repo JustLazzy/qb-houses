@@ -85,6 +85,7 @@ Real Estate for QB-Core Framework :house_with_garden:
 - /addgarage - Adds a garage to nearby house (Only people with "realestate" job)
 - /enter - Enters the nearby house (keys needed)
 - /ring - Rings the bell of nearby house
+- /addmailbox [object] [object number] - [object] if the house didn't have default mailbox, you can type yes to spawn it, [object number] Just pick 1-3, and you can add more in config.lua, at Config.Mailboxmodel
 
 ## Installation
 ### Manual
