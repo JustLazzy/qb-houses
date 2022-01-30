@@ -782,43 +782,47 @@ end)
 
 -- Mailbox wip
 RegisterNetEvent('qb-houses:client:setMailboxObject', function (model)
-    local x, y, z = table.unpack(GetEntityCoords(PlayerPedId()))
-    local rx, ry, rz = table.unpack(GetEntityRotation(PlayerPedId()))
-    local coords
-    local mailboxobject
-    if model ~= nil then
-        local mailboxhash = GetHashKey(tostring(model))
-        local ground,Z = GetGroundZFor_3dCoord(x+.0, y+.0, z + 999.0, 1)
-        if ground then          
-            coords = {
-                x = x,
-                y = y,
-                z = Z,
-                yaw = rz,
-                hash = tostring(model)
-            }
-            TriggerServerEvent('qb-houses:server:addMailbox', ClosestHouse, coords)
-            TriggerServerEvent('qb-houses:server:createMailbox', coords, mailboxhash, ClosestHouse)
-        end
-    else
-        for k,v in pairs(Config.Mailboxmodel) do
-            local closestObject = GetClosestObjectOfType(x, y, z, 2.0, v, false, false, false)
-            if closestObject ~= 0 then
-                mailboxobject = closestObject
-                break
+    if not IsInside then
+        local x, y, z = table.unpack(GetEntityCoords(PlayerPedId()))
+        local rx, ry, rz = table.unpack(GetEntityRotation(PlayerPedId()))
+        local coords
+        local mailboxobject
+        if model ~= nil then
+            local mailboxhash = GetHashKey(tostring(model))
+            local ground,Z = GetGroundZFor_3dCoord(x+.0, y+.0, z + 999.0, 1)
+            if ground then          
+                coords = {
+                    x = x,
+                    y = y,
+                    z = Z,
+                    yaw = rz,
+                    hash = tostring(model)
+                }
+                TriggerServerEvent('qb-houses:server:addMailbox', ClosestHouse, coords)
+                TriggerServerEvent('qb-houses:server:createMailbox', coords, mailboxhash, ClosestHouse)
+            end
+        else
+            for k,v in pairs(Config.Mailboxmodel) do
+                local closestObject = GetClosestObjectOfType(x, y, z, 2.0, v, false, false, false)
+                if closestObject ~= 0 then
+                    mailboxobject = closestObject
+                    break
+                end
+            end
+            if mailboxobject ~= nil then
+                local pos = GetEntityCoords(mailboxobject)
+                coords = {
+                    x= pos.x,
+                    y = pos.y,
+                    z = pos.z
+                }
+                TriggerServerEvent('qb-houses:server:addMailbox', ClosestHouse, coords)
+            else
+                QBCore.Functions.Notify('Nearby mailbox is not found', 'error')
             end
         end
-        if mailboxobject ~= nil then
-            local pos = GetEntityCoords(mailboxobject)
-            coords = {
-                x= pos.x,
-                y = pos.y,
-                z = pos.z
-            }
-            TriggerServerEvent('qb-houses:server:addMailbox', ClosestHouse, coords)
-        else
-            QBCore.Functions.Notify('Nearby mailbox is not found', 'error')
-        end
+    else
+        QBCore.Functions.Notify("You can't do this inside the house", 'error')
     end
 
 end)
