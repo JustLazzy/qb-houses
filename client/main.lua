@@ -1257,6 +1257,7 @@ CreateThread(function()
     Wait(100)
     TriggerEvent('qb-garages:client:setHouseGarage', ClosestHouse, HasHouseKey)
     TriggerServerEvent("qb-houses:server:setHouses")
+    TriggerServerEvent('qb-houses:server:spawnMailbox') 
 end)
 
 CreateThread(function()
@@ -1268,10 +1269,6 @@ CreateThread(function()
             end
         end
     end
-end)
-
-CreateThread(function()
-    TriggerServerEvent('qb-houses:server:spawnMailbox') 
 end)
 
 CreateThread(function()
