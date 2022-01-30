@@ -4,12 +4,6 @@ local houseownercid = {}
 local housekeyholders = {}
 local housesLoaded = false
 
-AddEventHandler('onResourceStop', function(resourceName)
-    if (GetCurrentResourceName() ~= resourceName) then
-      return
-    end
-    print('The resource ' .. resourceName .. ' was stopped.')
-  end)
 -- Threads
 
 CreateThread(function()
