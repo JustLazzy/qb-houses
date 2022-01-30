@@ -797,7 +797,7 @@ RegisterNetEvent('qb-houses:client:setMailboxObject', function (model)
                 yaw = rz,
                 hash = tostring(model)
             }
-            TriggerServerEvent('qb-houses:server:createMailbox', coords, mailboxhash)
+            TriggerServerEvent('qb-houses:server:createMailbox', coords, mailboxhash, ClosestHouse)
             TriggerServerEvent('qb-houses:server:addMailbox', ClosestHouse, coords)
         end
     else

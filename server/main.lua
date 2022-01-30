@@ -186,7 +186,7 @@ RegisterNetEvent('qb-houses:server:setHouses', function()
 end)
 
 RegisterNetEvent('qb-houses:server:createBlip', function()
-    local src = source
+    local src = source 
     local ped = GetPlayerPed(src)
     local coords = GetEntityCoords(ped)
     TriggerClientEvent("qb-houses:client:createBlip", -1, coords)
@@ -236,14 +236,14 @@ RegisterNetEvent('qb-houses:server:addMailbox', function(house, coords)
     MySQL.Async.execute('UPDATE houselocations SET mailbox = ? WHERE name = ?', {json.encode(coords), house})
     TriggerClientEvent('QBCore:Notify', src, "Succesfully added mailbox to "..house, "success")
     Config.Houses[house]['mailbox'] = coords
-    print(json.encode(Config.Houses[house]['mailbox']))
     TriggerClientEvent('qb-houses:client:setMailboxConfig', -1, house, coords)
 end)
 
-RegisterNetEvent('qb-houses:server:createMailbox', function(coords, hash)
+RegisterNetEvent('qb-houses:server:createMailbox', function(coords, hash, house)
     local object = CreateObject(hash, coords.x, coords.y, coords.z, true, true, false)
     SetEntityRotation(object, 0, 0, coords.yaw)
     FreezeEntityPosition(object, true)
+    Config.Houses[house]['mailbox'].spawned = true
 end)
 
 RegisterNetEvent('qb-houses:server:spawnMailbox', function ()
