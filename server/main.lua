@@ -229,7 +229,7 @@ RegisterNetEvent('qb-houses:server:addGarage', function(house, coords)
     TriggerClientEvent('QBCore:Notify', src, Lang:t("info.added_garage", {value = garageInfo.label}))
 end)
 
--- MAILBOX STILL WIP
+-- MAILBOX
 
 RegisterNetEvent('qb-houses:server:addMailbox', function(house, coords)
     local src = source 
@@ -239,28 +239,7 @@ RegisterNetEvent('qb-houses:server:addMailbox', function(house, coords)
     TriggerClientEvent('qb-houses:client:setMailboxConfig', -1, house, coords)
 end)
 
-RegisterNetEvent('qb-houses:server:createMailbox', function(coords, hash, house)
-    local object = CreateObject(hash, coords.x, coords.y, coords.z, true, true, false)
-    SetEntityRotation(object, 0, 0, coords.yaw)
-    FreezeEntityPosition(object, true)
-    Config.Houses[house]['mailbox'].spawned = true
-end)
-
-RegisterNetEvent('qb-houses:server:spawnMailbox', function ()
-    for k, v in pairs(Config.Houses) do
-        local mailbox = v.mailbox
-        if mailbox.hash ~= nil and not mailbox.spawned  then
-            local hash = GetHashKey(mailbox.hash)
-            local mailboxobj = CreateObject(hash, mailbox.x, mailbox.y, mailbox.z, true, true, false)
-            SetEntityRotation(mailboxobj, 0, 0, mailbox.yaw)
-            FreezeEntityPosition(mailboxobj, true)
-            Config.Houses[k]['mailbox'].spawned = true
-            print('Spawned mailbox at '..k)
-        end
-    end
-end)
-
--- END OF MAILBOX
+-- 
 
 RegisterNetEvent('qb-houses:server:viewHouse', function(house)
     local src = source
