@@ -6,7 +6,7 @@ Config.UnownedBlips = false
 
 Config.Houses = {}
 
-Config.Distance = 5
+Config.Distance = 30.0
 
 Config.Mailboxmodel = {
 	'prop_letterbox_01',
