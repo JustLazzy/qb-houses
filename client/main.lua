@@ -1276,7 +1276,17 @@ CreateThread(function()
     Wait(100)
     TriggerEvent('qb-garages:client:setHouseGarage', ClosestHouse, HasHouseKey)
     TriggerServerEvent("qb-houses:server:setHouses")
-    TriggerServerEvent('qb-houses:server:spawnMailbox') 
+    exports['qb-target']:AddTargetModel(Config.Mailboxmodel, {
+        options = {
+            {
+                type="client",
+                event="qb-houses:client:OpenMailbox",
+                icon="fas fa-envelope",
+                label="Open Mailbox"
+            },
+        },
+        distance = 1.5
+    })
 end)
 
 CreateThread(function()
@@ -1290,9 +1300,46 @@ CreateThread(function()
     end
 end)
 
+CreateThread(function ()
+    while true do
+        Wait(500)
+        if Config.Houses ~= nil then
+            for k, v in pairs(Config.Houses) do
+                local mailbox = v.mailbox
+                if mailbox ~= nil and mailbox.hash then
+                    local hash = GetHashKey(mailbox.hash)
+                    local playerCoords = GetEntityCoords(PlayerPedId())
+                    local mailboxcoords = vector3(mailbox.x, mailbox.y, mailbox.z)
+                    local dist = #(playerCoords - mailboxcoords)
+                    if dist < Config.Distance and not mailbox.spawned and not mailbox.obj then
+                        reqModel(hash)
+                        mailbox.obj = CreateObject(hash, mailbox.x, mailbox.y, mailbox.z, false, false, false)
+                        SetEntityAlpha(mailbox.obj, 0)
+                        SetEntityRotation(mailbox.obj, 0, 0, mailbox.yaw)
+                        FreezeEntityPosition(mailbox.obj, true)
+                        for i = 0, 255, 50 do
+                            Wait(50)
+                            SetEntityAlpha(mailbox.obj, i)
+                        end
+                        mailbox.spawned = true
+                    end
+                    if dist >= Config.Distance and mailbox.spawned and mailbox.obj then
+                        for i = 255, 0, -51 do
+                            Wait(50)
+                            SetEntityAlpha(mailbox.obj, i, false)
+                        end
+                        DeleteObject(mailbox.obj)
+                        mailbox.spawned = false
+                        mailbox.obj = nil
+                    end
+                end
+            end
+        end 
+    end
+end)
+
 CreateThread(function()
     local shownMenu = false
-
     while true do
         local pos = GetEntityCoords(PlayerPedId())
         local inRange = false
@@ -1516,45 +1563,6 @@ CreateThread(function()
     end
 end)
 
-
-CreateThread(function ()
-    while true do
-        Wait(500)
-        for k, v in pairs(Config.Houses) do
-            local mailbox = v.mailbox
-            if mailbox.hash ~= nil then
-                local hash = GetHashKey(mailbox.hash)
-                local playerCoords = GetEntityCoords(PlayerPedId())
-                local mailboxcoords = vector3(mailbox.x, mailbox.y, mailbox.z)
-                local dist = #(playerCoords - mailboxcoords)
-                if dist < Config.Distance and not mailbox.spawned and not mailbox.obj then
-                    reqModel(hash)
-                    mailbox.obj = CreateObject(hash, mailbox.x, mailbox.y, mailbox.z, false, false, false)
-                    SetEntityAlpha(mailbox.obj, 0)
-                    SetEntityRotation(mailbox.obj, 0, 0, mailbox.yaw)
-                    FreezeEntityPosition(mailbox.obj, true)
-                    for i = 0, 255, 50 do
-                        Wait(50)
-                        SetEntityAlpha(mailbox.obj, i)
-                    end
-                    mailbox.spawned = true
-                end
-                if dist >= Config.Distance and mailbox.spawned and mailbox.obj then
-                    for i = 255, 0, -51 do
-                        Wait(50)
-                        SetEntityAlpha(mailbox.obj, i, false)
-                    end
-                    DeleteObject(mailbox.obj)
-                    mailbox.spawned = false
-                    mailbox.obj = nil
-                end
-            end
-        end
-    end 
-end)
-
-
-
 RegisterCommand('getoffset', function()
     local coords = GetEntityCoords(PlayerPedId())
     local houseCoords = vector3(
@@ -1571,15 +1579,3 @@ RegisterCommand('getoffset', function()
         print('Z: '..zdist)
     end
 end)
-
-exports['qb-target']:AddTargetModel(Config.Mailboxmodel, {
-    options = {
-        {
-            type="client",
-            event="qb-houses:client:OpenMailbox",
-            icon="fas fa-envelope",
-            label="Open Mailbox"
-        },
-    },
-    distance = 1.5
-})
