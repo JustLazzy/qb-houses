@@ -9,7 +9,6 @@ local housesLoaded = false
 CreateThread(function()
     local HouseGarages = {}
     local result = MySQL.Sync.fetchAll('SELECT * FROM houselocations', {})
-    -- print(result)
     if result[1] then
         for k, v in pairs(result) do
             local owned = false
