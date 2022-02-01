@@ -1,5 +1,7 @@
 # NOTE
 DM me if you have an issue, I know this edit is not perfect, and you need fork of my lj inventory [here](https://github.com/JustLazzy/lj-inventory)
+</br>
+I'm using tgiann skillbar for lockpicking, you can find it [here](https://github.com/TGIANN/fivem-tgiann-skillbar)
 
 # qb-houses
 Real Estate for QB-Core Framework :house_with_garden:
