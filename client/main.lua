@@ -4,6 +4,7 @@ ClosestHouse = nil
 HasHouseKey = false
 contractOpen = false
 local isOwned = false
+local isOwner = false
 local cam = nil
 local viewCam = false
 local FrontCam = false
@@ -23,6 +24,7 @@ local RamsDone = 0
 local keyholderMenu = {}
 local keyholderOptions = {}
 local fetchingHouseKeys = false
+local usingAdvanced = false
 
 -- Functions
 
@@ -345,6 +347,84 @@ local function CheckDistance(target, distance)
     local pos = GetEntityCoords(ped)
 
     return #(pos - target) <= distance
+end
+
+-- Lockpick
+local function lockpickFinish(success, house)
+    local ped = PlayerPedId()
+    local chance = math.random()
+    if success then
+        TriggerServerEvent('hud:server:GainStress', math.random(1, 4))
+        QBCore.Functions.Notify('Mailbox is now open', 'success')
+        Config.Houses[house].mailboxopen = true
+        ClearPedTasks(ped)
+    else
+        TriggerServerEvent('hud:server:GainStress', math.random(1, 4))
+        QBCore.Functions.Notify('Loser', 'error')
+        ClearPedTasks(ped)
+    end
+    if usingAdvanced then
+        if chance <= 5 then
+            TriggerEvent('inventory:client:ItemBox', QBCore.Shared.Items["advancedlockpick"], "remove")
+            TriggerServerEvent("QBCore:Server:RemoveItem", "advancedlockpick", 1)
+        end
+    else
+        if chance <= 5 then
+            TriggerEvent('inventory:client:ItemBox', QBCore.Shared.Items["lockpick"], "remove")
+            TriggerServerEvent("QBCore:Server:RemoveItem", "lockpick", 1)
+        end
+    end
+end
+
+local function startLockpick(house)
+    local ped = PlayerPedId()
+    loadAnimDict('anim@amb@clubhouse@tutorial@bkr_tut_ig3@')
+    TaskPlayAnim(ped, "anim@amb@clubhouse@tutorial@bkr_tut_ig3@", "machinic_loop_mechandplayer", 8.0, -8.0, -1, 16, 0, false, false, false)
+    local finished = exports["tgiann-skillbar"]:taskBar(math.random(20000, 30000))
+    if not finished then
+        lockpickFinish(false)
+    else
+        local finished2 = exports["tgiann-skillbar"]:taskBar(math.random(1000, 2000))
+        if not finished2 then
+            lockpickFinish(false)
+        else
+            local finished3 = exports["tgiann-skillbar"]:taskBar(math.random(500, 1000))
+            if not finished3 then
+                lockpickFinish(false)
+            else
+                local finished4 = exports["tgiann-skillbar"]:taskBar(math.random(1000, 1200))
+                if not finished4 then
+                    lockpickFinish(false)
+                else
+                    local finished5 = exports["tgiann-skillbar"]:taskBar(math.random(800, 1200))
+                    if not finished5 then
+                        lockpickFinish(false)
+                    else
+                        ClearPedSecondaryTask(ped)
+                        lockpickFinish(true, house)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function LockpickMailbox(isAdvanced)
+    local ped = PlayerPedId()
+    local pos = GetEntityCoords(ped)
+    if Config.MailboxLockpick then
+        for k, v in pairs(Config.Houses) do
+            local mailbox = v.mailbox
+            local dist = #(pos - vector3(mailbox.x, mailbox.y, mailbox.z))
+            if dist >= 2.5 then
+                if not v.mailboxopen then
+                    usingAdvanced = isAdvanced
+                    startLockpick(ClosestHouse)
+                    break
+                end
+            end
+        end
+    end
 end
 
 -- GUI Functions
@@ -830,7 +910,11 @@ RegisterNetEvent('qb-houses:client:setMailboxObject', function (model)
                 end
             end
             if mailboxobject ~= nil then
+                local mailboxconf = Config.Houses[ClosestHouse].mailbox
                 local pos = GetEntityCoords(mailboxobject)
+                if mailboxconf.spawned then
+                    DeleteObject(mailboxconf.obj)
+                end
                 coords = {
                     x= pos.x,
                     y = pos.y,
@@ -845,6 +929,12 @@ RegisterNetEvent('qb-houses:client:setMailboxObject', function (model)
         QBCore.Functions.Notify("You can't do this inside the house or the Closest house is not found", 'error')
     end
 
+end)
+
+-- LOCKPICKING
+RegisterNetEvent('lockpicks:UseLockpick')
+AddEventHandler('lockpicks:UseLockpick', function(isAdvanced)
+    LockpickMailbox(isAdvanced)
 end)
 
 -- END OF MAILBOX
@@ -917,6 +1007,10 @@ end)
 
 RegisterNetEvent('qb-houses:client:RevokeKey', function(data)
     RemoveHouseKey(data.citizenData)
+end)
+
+RegisterNetEvent('qb-houses:client:refreshHouseConfig', function(house, config)
+    Config.Houses[house] = config
 end)
 
 RegisterNetEvent('qb-houses:client:refreshHouse', function(data)
@@ -1194,12 +1288,23 @@ RegisterNetEvent('qb-houses:client:OpenMailbox', function()
         local mailboxinfo = Config.Houses[ClosestHouse].mailbox
         if mailboxinfo.x ~= nil then
             local dist = #(pos - vector3(mailboxinfo.x, mailboxinfo.y, mailboxinfo.z))
-            if dist < 3.5 then 
-                TriggerServerEvent("inventory:server:OpenInventory", "mailbox", ClosestHouse)
-                TriggerServerEvent("InteractSound_SV:PlayOnSource", "Mailbox", 0.4)
-                TriggerEvent("inventory:client:SetCurrentMailbox", ClosestHouse)
-            else 
-                QBCore.Functions.Notify(Lang:t("error.no_mailbox"), "error")
+            if Config.Houses[ClosestHouse].owned then
+                QBCore.Functions.TriggerCallback('qb-houses:server:getHouseOwner', function(result)
+                    if dist < 3.5 then
+                            local PlayerData = QBCore.Functions.GetPlayerData()
+                            if PlayerData.job.name == 'postman' or PlayerData.citizenid == result or Config.Houses[ClosestHouse].mailboxopen then
+                                TriggerServerEvent("inventory:server:OpenInventory", "mailbox", ClosestHouse)
+                                TriggerServerEvent("InteractSound_SV:PlayOnSource", "Mailbox", 0.4)
+                                TriggerEvent("inventory:client:SetCurrentMailbox", ClosestHouse)
+                            else
+                                QBCore.Functions.Notify("The mailbox is locked", 'error')
+                            end
+                    else 
+                        QBCore.Functions.Notify(Lang:t("error.no_mailbox"), "error")
+                    end
+                end, ClosestHouse)
+            else
+                QBCore.Functions.Notify("This house is not owned by anyone", "error")
             end
         else
             QBCore.Functions.Notify(Lang:t("error.no_mailbox"), "error")
@@ -1245,6 +1350,19 @@ end)
 RegisterNetEvent('qb-houses:client:KeyholderOptions', function(data)
     optionMenu(data.citizenData)
 end)
+
+RegisterNetEvent('qb-houses:client:toggleMailbox', function()
+    local houseconfig = Config.Houses[ClosestHouse]
+    if houseconfig ~= nil then
+        if not houseconfig.mailboxopen then
+            QBCore.Functions.Notify("Mailbox unlocked", 'primary')
+            TriggerServerEvent('qb-houses:server:lockMailbox', true, ClosestHouse)
+        else
+            QBCore.Functions.Notify("Mailbox locked", 'primary')
+            TriggerServerEvent('qb-houses:server:lockMailbox', false, ClosestHouse)
+        end
+    end
+end)
 -- NUI Callbacks
 
 RegisterNUICallback('HasEnoughMoney', function(data, cb)
@@ -1276,17 +1394,6 @@ CreateThread(function()
     Wait(100)
     TriggerEvent('qb-garages:client:setHouseGarage', ClosestHouse, HasHouseKey)
     TriggerServerEvent("qb-houses:server:setHouses")
-    exports['qb-target']:AddTargetModel(Config.Mailboxmodel, {
-        options = {
-            {
-                type="client",
-                event="qb-houses:client:OpenMailbox",
-                icon="fas fa-envelope",
-                label="Open Mailbox"
-            },
-        },
-        distance = 1.5
-    })
 end)
 
 CreateThread(function()
@@ -1334,7 +1441,8 @@ CreateThread(function ()
                     end
                 end
             end
-        end 
+        end
+
     end
 end)
 
@@ -1578,4 +1686,58 @@ RegisterCommand('getoffset', function()
         print('Y: '..ydist)
         print('Z: '..zdist)
     end
+end)
+
+CreateThread(function()
+    while true do
+        Wait(100)
+        local Player = QBCore.Functions.GetPlayerData()
+        QBCore.Functions.TriggerCallback('qb-houses:server:getHouseOwner', function(result)
+            if Player.citizenid == result then
+                isOwner = true
+            else
+                isOwner = false
+            end
+        end, ClosestHouse)
+    end
+end)
+
+CreateThread(function ()
+    exports['qb-target']:AddTargetModel(Config.Mailboxmodel, {
+        options = {
+            {
+                type="client",
+                event="qb-houses:client:OpenMailbox",
+                icon="fas fa-envelope",
+                label="Open Mailbox"
+            },
+            {
+                type="client",
+                event="qb-houses:client:toggleMailbox",
+                icon="fas fa-lock",
+                label="Lock Mailbox",
+                canInteract = function()
+                    if isOwner and Config.Houses[ClosestHouse].mailboxopen then
+                        return true
+                    else
+                        return false
+                    end
+                end
+            },
+            {
+                type="client",
+                event="qb-houses:client:toggleMailbox",
+                icon="fas fa-lock-open",
+                label="Unlock Mailbox",
+                canInteract = function()
+                    if isOwner and not Config.Houses[ClosestHouse].mailboxopen then
+                        return true
+                    else
+                        return false
+                    end
+                end
+            }
+        },
+        distance = 1.5
+    })
 end)

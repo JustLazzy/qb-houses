@@ -373,6 +373,12 @@ RegisterNetEvent('qb-houses:server:giveHouseKey', function(target, house)
     end
 end)
 
+RegisterNetEvent('qb-houses:server:lockMailbox', function(locked, house)
+    local config = Config.Houses[house]
+    config.mailboxopen = locked
+    TriggerClientEvent("qb-houses:client:refreshHouseConfig", -1, house, config)
+end)
+
 RegisterNetEvent('qb-houses:server:setLocation', function(coords, house, type)
     if type == 1 then
         MySQL.Async.execute('UPDATE player_houses SET stash = ? WHERE house = ?', {json.encode(coords), house})

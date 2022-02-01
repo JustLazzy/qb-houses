@@ -7,12 +7,12 @@ Config.UnownedBlips = false
 Config.Houses = {}
 
 Config.Distance = 30.0
-
-Config.Mailboxmodel = {
+Config.Mailboxmodel = { -- Mailbox props
 	'prop_letterbox_01',
 	'prop_letterbox_02',
 	'prop_letterbox_03'
 }
+Config.MailboxLockpick = true -- Allow lockpicking mailbox
 
 Config.Furniture = {
 	["sofas"] = {
