@@ -412,17 +412,14 @@ end
 local function LockpickMailbox(isAdvanced)
     local ped = PlayerPedId()
     local pos = GetEntityCoords(ped)
-    if Config.MailboxLockpick then
-        for k, v in pairs(Config.Houses) do
-            local mailbox = v.mailbox
+    if Config.MailboxLockpick and ClosestHouse ~= nil then
+        local mailbox = Config.Houses[ClosestHouse].mailbox
+        if mailbox ~= nil then
             local dist = #(pos - vector3(mailbox.x, mailbox.y, mailbox.z))
-            if dist >= 2.5 then
-                if not v.mailboxopen then
-                    usingAdvanced = isAdvanced
-                    startLockpick(ClosestHouse)
-                    break
-                end
-            end
+            if dist <= 1.5 and not Config.Houses[ClosestHouse].mailboxopen then
+                usingAdvanced = isAdvanced
+                startLockpick(ClosestHouse)
+            end 
         end
     end
 end
@@ -933,6 +930,7 @@ end)
 
 -- LOCKPICKING
 RegisterNetEvent('lockpicks:UseLockpick')
+
 AddEventHandler('lockpicks:UseLockpick', function(isAdvanced)
     LockpickMailbox(isAdvanced)
 end)
@@ -1286,9 +1284,9 @@ RegisterNetEvent('qb-houses:client:OpenMailbox', function()
         local ped = PlayerPedId()
         local pos = GetEntityCoords(ped)
         local mailboxinfo = Config.Houses[ClosestHouse].mailbox
-        if mailboxinfo.x ~= nil then
-            local dist = #(pos - vector3(mailboxinfo.x, mailboxinfo.y, mailboxinfo.z))
+        if mailboxinfo ~= nil then
             if Config.Houses[ClosestHouse].owned then
+                local dist = #(pos - vector3(mailboxinfo.x, mailboxinfo.y, mailboxinfo.z))
                 QBCore.Functions.TriggerCallback('qb-houses:server:getHouseOwner', function(result)
                     if dist < 3.5 then
                             local PlayerData = QBCore.Functions.GetPlayerData()
