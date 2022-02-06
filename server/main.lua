@@ -26,7 +26,8 @@ CreateThread(function()
                 tier = v.tier,
                 garage = garage,
                 decorations = {},
-                mailbox = mailbox
+                mailbox = mailbox,
+                mailboxopen =  false
             }
             HouseGarages[v.name] = {
                 label = v.label,
@@ -374,9 +375,9 @@ RegisterNetEvent('qb-houses:server:giveHouseKey', function(target, house)
 end)
 
 RegisterNetEvent('qb-houses:server:lockMailbox', function(locked, house)
-    local config = Config.Houses[house]
-    config.mailboxopen = locked
-    TriggerClientEvent("qb-houses:client:refreshHouseConfig", -1, house, config)
+    local config = Config.Houses[house].mailboxopen
+    config = locked
+    TriggerClientEvent("qb-houses:client:toggleMailboxConfig", -1, house, config)
 end)
 
 RegisterNetEvent('qb-houses:server:setLocation', function(coords, house, type)

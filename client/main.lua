@@ -1007,8 +1007,8 @@ RegisterNetEvent('qb-houses:client:RevokeKey', function(data)
     RemoveHouseKey(data.citizenData)
 end)
 
-RegisterNetEvent('qb-houses:client:refreshHouseConfig', function(house, config)
-    Config.Houses[house] = config
+RegisterNetEvent('qb-houses:client:toggleMailboxConfig', function(house, config)
+    Config.Houses[house].mailboxopen = config
 end)
 
 RegisterNetEvent('qb-houses:client:refreshHouse', function(data)
@@ -1287,20 +1287,19 @@ RegisterNetEvent('qb-houses:client:OpenMailbox', function()
         if mailboxinfo ~= nil then
             if Config.Houses[ClosestHouse].owned then
                 local dist = #(pos - vector3(mailboxinfo.x, mailboxinfo.y, mailboxinfo.z))
-                QBCore.Functions.TriggerCallback('qb-houses:server:getHouseOwner', function(result)
-                    if dist < 3.5 then
-                            local PlayerData = QBCore.Functions.GetPlayerData()
-                            if PlayerData.job.name == 'postman' or PlayerData.citizenid == result or Config.Houses[ClosestHouse].mailboxopen then
-                                TriggerServerEvent("inventory:server:OpenInventory", "mailbox", ClosestHouse)
-                                TriggerServerEvent("InteractSound_SV:PlayOnSource", "Mailbox", 0.4)
-                                TriggerEvent("inventory:client:SetCurrentMailbox", ClosestHouse)
-                            else
-                                QBCore.Functions.Notify("The mailbox is locked", 'error')
-                            end
-                    else 
-                        QBCore.Functions.Notify(Lang:t("error.no_mailbox"), "error")
+                if dist < 3.5 then
+                    local PlayerData = QBCore.Functions.GetPlayerData()
+                    if PlayerData.job.name == 'postman' or isOwner or Config.Houses[ClosestHouse].mailboxopen then
+                        TriggerServerEvent("inventory:server:OpenInventory", "mailbox", ClosestHouse)
+                        TriggerServerEvent("InteractSound_SV:PlayOnSource", "Mailbox", 0.4)
+                        TriggerEvent("inventory:client:SetCurrentMailbox", ClosestHouse)
+                    else
+                        QBCore.Functions.Notify("The mailbox is locked", 'error')
                     end
-                end, ClosestHouse)
+            else 
+                QBCore.Functions.Notify(Lang:t("error.no_mailbox"), "error")
+            end
+            
             else
                 QBCore.Functions.Notify("This house is not owned by anyone", "error")
             end
